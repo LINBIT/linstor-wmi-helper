@@ -29,9 +29,19 @@ class Program
 		EnumerationOptions e = new EnumerationOptions();
 		e.EnumerateDeep = true;
 		Console.Write("X1");
+		// var p = m.GetMethodParameters("GetSupportedSize");
+		var p = m.GetMethodParameters("GetSupportedSize");
+		/*
+		ManagementBaseObject params = m.GetMethodParameters("GetSupportedSize");
+		*/
+		p["ResiliencySettingName"] = "";
+
 		foreach (ManagementObject o in m.GetInstances(e))
 		{
 			Console.WriteLine("Instance "+o["FriendlyName"]);
+			ManagementBaseObject r = o.InvokeMethod("GetSupportedSize", p, null);
+//			Assert.IsNotNull(r);
+			Console.WriteLine("Max Size "+r["VirtualDiskSizeMax"].ToString());
 		}
 		Console.Write("X2");
 		return m.GetInstances();
