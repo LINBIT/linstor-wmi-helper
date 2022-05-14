@@ -22,8 +22,10 @@ class Program
 {
 	private static ManagementObjectCollection GetStoragePools()
 	{
-		// ManagementClass m = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage\\providers_v2:MSFT_StoragePool");
-		ManagementClass m = new ManagementClass("CIM_Service");
+		ManagementClass m = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_StoragePool");
+	// 	ManagementClass m = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage\\providers_v2:MSFT_StorageSubSystem");
+		// ManagementClass m = new ManagementClass("CIM_Service");
+		// ManagementClass m = new ManagementClass("MSFT_StoragePool");
 		EnumerationOptions e = new EnumerationOptions();
 		e.EnumerateDeep = true;
 		Console.Write("X1");
