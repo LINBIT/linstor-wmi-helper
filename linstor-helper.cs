@@ -22,11 +22,16 @@ class Program
 {
 	private static ManagementObjectCollection GetStoragePools()
 	{
-		ManagementClass m = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage\\providers_v2:MSFT_StorageSubSystem");
-		foreach (ManagementObject o in m.GetInstances())
+		// ManagementClass m = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage\\providers_v2:MSFT_StoragePool");
+		ManagementClass m = new ManagementClass("CIM_Service");
+		EnumerationOptions e = new EnumerationOptions();
+		e.EnumerateDeep = true;
+		Console.Write("X1");
+		foreach (ManagementObject o in m.GetInstances(e))
 		{
-			Console.Write("Instance");
+			Console.WriteLine("Instance "+o["Name"]);
 		}
+		Console.Write("X2");
 		return m.GetInstances();
 	}
 			
