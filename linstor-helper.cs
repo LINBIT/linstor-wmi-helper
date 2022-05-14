@@ -31,7 +31,7 @@ class Program
 		Console.Write("X1");
 		foreach (ManagementObject o in m.GetInstances(e))
 		{
-			Console.WriteLine("Instance "+o["Name"]);
+			Console.WriteLine("Instance "+o["FriendlyName"]);
 		}
 		Console.Write("X2");
 		return m.GetInstances();
