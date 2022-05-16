@@ -10,14 +10,17 @@ class Program
 		return StoragePoolClass.GetInstances();
 	}
 
-	private static ManagementObjectCollection GetStoragePoolByFriendlyName(String name)
+	private static ManagementObject GetStoragePoolByFriendlyName(String name)
 	{
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Select * From MSFT_StoragePool Where FriendlyName = '"+name+"'");
 		var res = query.Get();
+		ManagementObject[] arr = { null };
+
 		if (res.Count != 1) {
 			throw new Exception("Expected Storage Pool with friendly name "+name+" to exist and be unique, I got "+res.Count+" objects.");
 		}
-		return res;
+		res.CopyTo(arr, 0);
+		return arr[0];
 	}
 
 	private static void InitializeWMIClasses()
@@ -34,22 +37,19 @@ class Program
 			Console.WriteLine("Usage: linstor-helper <storage-pool-friendly-name>");
 			return;
 		}
-		var pools = GetStoragePoolByFriendlyName(args[0]);
+		var pool = GetStoragePoolByFriendlyName(args[0]);
 
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("GetSupportedSize");
 		p["ResiliencySettingName"] = "Simple";
 
-		foreach (ManagementObject o in pools)
-		{
-			Console.WriteLine("Instance "+o["FriendlyName"]);
-			ManagementBaseObject r = o.InvokeMethod("GetSupportedSize", p, null);
+		Console.WriteLine("Instance "+pool["FriendlyName"]);
+		ManagementBaseObject r = pool.InvokeMethod("GetSupportedSize", p, null);
 
-			Console.WriteLine("Max Size "+r["VirtualDiskSizeMax"]);
-			Console.WriteLine("Min Size "+r["VirtualDiskSizeMin"]);
-			Console.WriteLine("Divisor "+r["VirtualDiskSizeDivisor"]);
-			Console.WriteLine("retval "+r["ReturnValue"]);
-			Console.WriteLine("status "+r["ExtendedStatus"]);
-			Console.WriteLine("supported sizes "+r["SupportedSizes"]);
-		}
+		Console.WriteLine("Max Size "+r["VirtualDiskSizeMax"]);
+		Console.WriteLine("Min Size "+r["VirtualDiskSizeMin"]);
+		Console.WriteLine("Divisor "+r["VirtualDiskSizeDivisor"]);
+		Console.WriteLine("retval "+r["ReturnValue"]);
+		Console.WriteLine("status "+r["ExtendedStatus"]);
+		Console.WriteLine("supported sizes "+r["SupportedSizes"]);
 	}
 }
