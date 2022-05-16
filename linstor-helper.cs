@@ -7,8 +7,13 @@ class Program
 
 	private static ManagementObjectCollection GetStoragePools()
 	{
-		ManagementClass m = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_StoragePool");
 		return StoragePoolClass.GetInstances();
+	}
+
+	private static ManagementObjectCollection GetStoragePoolByFriendlyName(String name)
+	{
+		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Select * From MSFT_StoragePool");
+		return query.Get();
 	}
 
 	private static void InitializeWMIClasses()
@@ -19,7 +24,8 @@ class Program
 	public static void Main(string[] args)
 	{
 		InitializeWMIClasses();
-		var pools = GetStoragePools();
+		// var pools = GetStoragePools();
+		var pools = GetStoragePoolByFriendlyName("WinDRBDTestPool");
 
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("GetSupportedSize");
 		p["ResiliencySettingName"] = "Simple";
