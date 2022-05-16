@@ -46,8 +46,11 @@ class Program
 //			Assert.IsNotNull(r);
 			// Console.WriteLine("Max Size "+r["VirtualDiskSizeMax"].ToString());
 			Console.WriteLine("Max Size "+r["VirtualDiskSizeMax"]);
+			Console.WriteLine("Min Size "+r["VirtualDiskSizeMin"]);
+			Console.WriteLine("Divisor "+r["VirtualDiskSizeDivisor"]);
 			// Console.WriteLine("Sizes "+Sizes.length);
 			Console.WriteLine("retval "+r["ReturnValue"]);
+			Console.WriteLine("status "+r["ExtendedStatus"]);
 			Console.WriteLine("supported sizes "+r["SupportedSizes"]);
 		}
 		Console.Write("X2");
