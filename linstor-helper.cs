@@ -34,14 +34,21 @@ class Program
 		/*
 		ManagementBaseObject params = m.GetMethodParameters("GetSupportedSize");
 		*/
-		p["ResiliencySettingName"] = "";
+		p["ResiliencySettingName"] = "Simple";
 
 		foreach (ManagementObject o in m.GetInstances(e))
 		{
 			Console.WriteLine("Instance "+o["FriendlyName"]);
 			ManagementBaseObject r = o.InvokeMethod("GetSupportedSize", p, null);
+//			UInt64[] Sizes = r["SupportedSizes"];
+			// String status = r["ExtendedStatus"];
+
 //			Assert.IsNotNull(r);
-			Console.WriteLine("Max Size "+r["VirtualDiskSizeMax"].ToString());
+			// Console.WriteLine("Max Size "+r["VirtualDiskSizeMax"].ToString());
+			Console.WriteLine("Max Size "+r["VirtualDiskSizeMax"]);
+			// Console.WriteLine("Sizes "+Sizes.length);
+			Console.WriteLine("retval "+r["ReturnValue"]);
+			Console.WriteLine("supported sizes "+r["SupportedSizes"]);
 		}
 		Console.Write("X2");
 		return m.GetInstances();
