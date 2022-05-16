@@ -3,13 +3,28 @@ using System.Management;
 
 class Program
 {
+	private static ManagementClass StoragePoolClass;
+
 	private static ManagementObjectCollection GetStoragePools()
 	{
 		ManagementClass m = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_StoragePool");
-		ManagementBaseObject p = m.GetMethodParameters("GetSupportedSize");
+		return StoragePoolClass.GetInstances();
+	}
+
+	private static void InitializeWMIClasses()
+	{
+		StoragePoolClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_StoragePool");
+	}
+
+	public static void Main(string[] args)
+	{
+		InitializeWMIClasses();
+		var pools = GetStoragePools();
+
+		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("GetSupportedSize");
 		p["ResiliencySettingName"] = "Simple";
 
-		foreach (ManagementObject o in m.GetInstances())
+		foreach (ManagementObject o in pools)
 		{
 			Console.WriteLine("Instance "+o["FriendlyName"]);
 			ManagementBaseObject r = o.InvokeMethod("GetSupportedSize", p, null);
@@ -21,11 +36,5 @@ class Program
 			Console.WriteLine("status "+r["ExtendedStatus"]);
 			Console.WriteLine("supported sizes "+r["SupportedSizes"]);
 		}
-		return m.GetInstances();
-	}
-			
-	public static void Main(string[] args)
-	{
-		GetStoragePools();
 	}
 }
