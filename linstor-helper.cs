@@ -34,8 +34,7 @@ class Program
 			Console.WriteLine("Usage: linstor-helper <storage-pool-friendly-name>");
 			return;
 		}
-		var pools = GetStoragePoolByFriendlyName("WinDRBDTestPool");
-//		var pools = GetStoragePoolByFriendlyName("WinDRBDTestPool1");
+		var pools = GetStoragePoolByFriendlyName(args[0]);
 
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("GetSupportedSize");
 		p["ResiliencySettingName"] = "Simple";
