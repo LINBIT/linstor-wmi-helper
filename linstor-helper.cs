@@ -12,8 +12,12 @@ class Program
 
 	private static ManagementObjectCollection GetStoragePoolByFriendlyName(String name)
 	{
-		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Select * From MSFT_StoragePool");
-		return query.Get();
+		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Select * From MSFT_StoragePool Where FriendlyName = '"+name+"'");
+		var res = query.Get();
+		if (res.Count != 1) {
+			throw new Exception("Expected Storage Pool with friendly name "+name+" to exist and be unique, I got "+res.Count+" objects.");
+		}
+		return res;
 	}
 
 	private static void InitializeWMIClasses()
@@ -25,7 +29,13 @@ class Program
 	{
 		InitializeWMIClasses();
 		// var pools = GetStoragePools();
+		Console.Write(args.Length+" args");
+		if (args.Length < 1) {
+			Console.WriteLine("Usage: linstor-helper <storage-pool-friendly-name>");
+			return;
+		}
 		var pools = GetStoragePoolByFriendlyName("WinDRBDTestPool");
+//		var pools = GetStoragePoolByFriendlyName("WinDRBDTestPool1");
 
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("GetSupportedSize");
 		p["ResiliencySettingName"] = "Simple";
