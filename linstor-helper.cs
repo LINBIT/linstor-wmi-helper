@@ -61,7 +61,8 @@ Console.WriteLine(query_string);
 		ManagementObject[] arr = { null };
 
 		foreach (ManagementObject obj in res) {
-			Console.WriteLine("Disk: {0} VirtualDisk: {1}", obj["Disk"], obj["VirtualDisk"]);
+			// Console.WriteLine("Disk: {0} VirtualDisk: {1}", obj["Disk"], obj["VirtualDisk"]);
+			Console.WriteLine("Name: {0}", obj["Name"]);
 		}
 /*
 		if (res.Count != 1) {
