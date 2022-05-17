@@ -33,8 +33,11 @@ class Program
 		// var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='%7b1%7d%5c%5cSERVER2019-1%5croot/Microsoft/Windows/Storage/Providers_v2%5c%5cSPACES_VirtualDisk.ObjectId=%22%7b33fba0cb-bf8f-11ec-9b04-806e6f6e6963%7d:VD:%7b3143d14e-abf2-4bba-bc1d-7cf19ae0ba48%7d%7b0b274417-075e-4864-8d1f-ae605634c414%7d%22'}";
 		// var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='%7b1%7d'}"; /* works */
 		// var query_string = "Associators Of {MSFT_VirtualDisk.ObjectId='"+Uri.EscapeUriString(vdisk["ObjectID"].ToString())+"'}";
-		var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='"+Uri.EscapeUriString(vdisk["ObjectID"].ToString())+"'} where ClassDefsOnly"; /* not found */
+//		var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='"+Uri.EscapeUriString(vdisk["ObjectID"].ToString())+"'} where ClassDefsOnly"; /* not found */
 //		var query_string = "Associators Of {MSFT_VirtualDisk.ObjectId="+Uri.EscapeUriString(vdisk["ObjectID"].ToString())+"} where ClassDefsOnly";
+
+		// var query_string = String.format("select * from MSFT_VirtualDiskToDisk where virtualdisk={0}", vdisk);
+		var query_string = "select * from MSFT_VirtualDiskToDisk";
 
 Console.WriteLine(query_string);
 		
@@ -42,9 +45,14 @@ Console.WriteLine(query_string);
 		var res = query.Get();
 		ManagementObject[] arr = { null };
 
+		foreach (ManagementObject obj in res) {
+			Console.WriteLine("Disk: {0} VirtualDisk: {1}", obj["Disk"], obj["VirtualDisk"]);
+		}
+/*
 		if (res.Count != 1) {
 			throw new Exception("Expected Disk object for Virtual Disk with object ID "+vdisk["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
 		}
+*/
 		res.CopyTo(arr, 0);
 		return arr[0];
 	}
