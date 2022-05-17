@@ -48,6 +48,11 @@ class Program
 		Console.WriteLine("status "+ret["ExtendedStatus"]);
 		Console.WriteLine("virtualdisk "+ret["CreatedVirtualDisk"]);
 
+		ManagementBaseObject disk = (ManagementBaseObject) ret["CreatedVirtualDisk"];
+		if (disk != null) {
+			Console.WriteLine("class is "+disk.ClassPath);
+		}
+
 		return null;
 	}
 
