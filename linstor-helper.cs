@@ -45,11 +45,18 @@ class Program
 // var query_string = "Associators Of {"+Uri.EscapeUriString("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_VirtualDisk.ObjectId='{1}\\\\\\\\SERVER2019-1\\\\root/Microsoft/Windows/Storage/Providers_v2\\\\SPACES_VirtualDisk.ObjectId=\\\"{33fba0cb-bf8f-11ec-9b04-806e6f6e6963}:VD:{3143d14e-abf2-4bba-bc1d-7cf19ae0ba48}{f945f034-2f4f-4b3c-92e8-f975b4522ebb}\\\"\"'")+"} where ClassDefsOnly";
 // var query_string = "Associators Of {\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_VirtualDisk.ObjectId='%7b1%7d\\\\\\\\SERVER2019-1\\\\root/Microsoft/Windows/Storage/Providers_v2\\\\SPACES_VirtualDisk.ObjectId=\\\"{33fba0cb-bf8f-11ec-9b04-806e6f6e6963}:VD:{3143d14e-abf2-4bba-bc1d-7cf19ae0ba48}{f945f034-2f4f-4b3c-92e8-f975b4522ebb}\\\"\"'} where ClassDefsOnly";
 // var query_string = "Associators Of {\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_VirtualDisk.ObjectId=\"%7b1%7d\\\\\\\\SERVER2019-1\\\\root/Microsoft/Windows/Storage/Providers_v2\\\\SPACES_VirtualDisk.ObjectId=\\\"%7b33fba0cb-bf8f-11ec-9b04-806e6f6e6963%7d:VD:%7b3143d14e-abf2-4bba-bc1d-7cf19ae0ba48%7d%7be60ed2b2-118a-48cf-8646-3018b5b7d6c1%7d\\\"\"} where ClassDefsOnly";
-var query_string = "Associators Of {\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_VirtualDisk.ObjectId=\"\\{1\\}\\\\\\\\SERVER2019-1\\\\root/Microsoft/Windows/Storage/Providers_v2\\\\SPACES_VirtualDisk.ObjectId=\\\"\\{33fba0cb-bf8f-11ec-9b04-806e6f6e6963\\}:VD:\\{3143d14e-abf2-4bba-bc1d-7cf19ae0ba48\\}\\{e60ed2b2-118a-48cf-8646-3018b5b7d6c1\\}\\\"\"} where ClassDefsOnly";
+// var query_string = "Associators Of {\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_VirtualDisk.ObjectId=\"\\{1\\}\\\\\\\\SERVER2019-1\\\\root/Microsoft/Windows/Storage/Providers_v2\\\\SPACES_VirtualDisk.ObjectId=\\\"\\{33fba0cb-bf8f-11ec-9b04-806e6f6e6963\\}:VD:\\{3143d14e-abf2-4bba-bc1d-7cf19ae0ba48\\}\\{e60ed2b2-118a-48cf-8646-3018b5b7d6c1\\}\\\"\"} where ClassDefsOnly";
+// var query_string = vdisk["ObjectId"].ToString();
+const string query_string = @"Associators of {"
+                     + @"Win32_Directory.Name="""
+                     + @"c:\\program files (x86)\\a_test}"
+                     + @"""} "
+                     + @"Where AssocClass = Win32_Subdirectory ResultRole = PartComponent";
 
 Console.WriteLine(query_string);
 		
-		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
+		// var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
+		var query = new ManagementObjectSearcher("ROOT\\cimv2", query_string);
 		var res = query.Get();
 		ManagementObject[] arr = { null };
 
