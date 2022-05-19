@@ -50,6 +50,7 @@ class Program
 const string query_string = @"Associators of {"
                      + @"Win32_Directory.Name="""
                      + @"c:\\program files (x86)\\a_test}"
+                     // + @"c:\\program files (x86)\\a_test}\"""
                      + @"""} "
                      + @"Where AssocClass = Win32_Subdirectory ResultRole = PartComponent";
 
