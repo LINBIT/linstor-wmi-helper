@@ -49,21 +49,27 @@ class Program
 // var query_string = vdisk["ObjectId"].ToString();
 const string query_string = @"Associators of {"
                      + @"Win32_Directory.Name="""
-                     + @"c:\\program files (x86)\\a_test}"
-                     // + @"c:\\program files (x86)\\a_test}\"""
-                     + @"""} "
-                     + @"Where AssocClass = Win32_Subdirectory ResultRole = PartComponent";
+                     // + @"c:\\program files (x86)\\a_test}"
+                     + @"c:\\program files (x86)\\a_test}\"""
+                     // + @"""} "
+                     + @"""} ";
+//                     + @"Where AssocClass = Win32_Subdirectory ResultRole = PartComponent";
 
 Console.WriteLine(query_string);
 		
 		// var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
 		var query = new ManagementObjectSearcher("ROOT\\cimv2", query_string);
 		var res = query.Get();
+Console.WriteLine("res.Count is "+res.Count);
 		ManagementObject[] arr = { null };
 
 		foreach (ManagementObject obj in res) {
 			// Console.WriteLine("Disk: {0} VirtualDisk: {1}", obj["Disk"], obj["VirtualDisk"]);
-			Console.WriteLine("Name: {0}", obj["Name"]);
+			try {
+				Console.WriteLine("Name: {0}", obj["Name"]);
+			} catch (Exception e) {
+				Console.WriteLine("exception "+e);
+			}
 		}
 /*
 		if (res.Count != 1) {
@@ -86,6 +92,10 @@ Console.WriteLine(query_string);
 
 	private static ManagementObject CreateVirtualDisk(ManagementObject pool, string friendly_name, ulong size, bool thin)
 	{
+		Console.Write("About to call GetDiskForVirtualDisk ...\n");
+		ManagementObject Xdisk = GetDiskForVirtualDisk(null);
+		return null;
+
 		Console.Write("About to create virtual disk "+friendly_name+" with "+size+" bytes\n");
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("CreateVirtualDisk");
 		p["FriendlyName"] = friendly_name;
