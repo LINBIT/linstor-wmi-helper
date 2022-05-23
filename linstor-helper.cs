@@ -51,9 +51,11 @@ const string query_string = @"Associators of {"
                      + @"Win32_Directory.Name="""
                      // + @"c:\\program files (x86)\\a_test}"
                      + @"c:\\program files (x86)\\a_test}\"""
-                     // + @"""} "
-                     + @"""} ";
+                     + @"""} "
+                     // + @"""} ";
+                    //  + @"Where ClassDefsOnly";
 //                     + @"Where AssocClass = Win32_Subdirectory ResultRole = PartComponent";
+                     + @"Where AssocClass = Win32_Directory ResultRole = PartComponent";
 
 Console.WriteLine(query_string);
 		
@@ -66,9 +68,11 @@ Console.WriteLine("res.Count is "+res.Count);
 		foreach (ManagementObject obj in res) {
 			// Console.WriteLine("Disk: {0} VirtualDisk: {1}", obj["Disk"], obj["VirtualDisk"]);
 			try {
+				// Console.WriteLine("Path: {0}", obj.Path);
 				Console.WriteLine("Name: {0}", obj["Name"]);
-			} catch (Exception e) {
-				Console.WriteLine("exception "+e);
+			} catch (System.Management.ManagementException e) {
+				// Console.WriteLine("exception "+e);
+				Console.WriteLine("exception 123");
 			}
 		}
 /*
