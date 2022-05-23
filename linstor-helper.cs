@@ -34,13 +34,11 @@ class Program
                      // + @"Where AssocClass = MSFT_Disk";
                      + @"Where AssocClass = MSFT_VirtualDiskToDisk";
 
-Console.WriteLine(query_string);
-		
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
 		var res = query.Get();
-Console.WriteLine("res.Count is "+res.Count);
 		ManagementObject[] arr = { null };
 
+/*
 		foreach (ManagementObject obj in res) {
 			// Console.WriteLine("Disk: {0} VirtualDisk: {1}", obj["Disk"], obj["VirtualDisk"]);
 			try {
@@ -49,6 +47,7 @@ Console.WriteLine("res.Count is "+res.Count);
 				Console.WriteLine("exception "+e);
 			}
 		}
+*/
 		if (res.Count != 1) {
 			throw new Exception("Expected Disk object for Virtual Disk with object ID "+vdisk["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
 		}
@@ -91,6 +90,7 @@ Console.WriteLine("res.Count is "+res.Count);
 		if (vdisk != null) {
 			Console.WriteLine("class is "+vdisk.ClassPath);
 			ManagementObject disk = GetDiskForVirtualDisk(vdisk);
+			Console.WriteLine("disk class is "+disk.ClassPath);
 		}
 
 		return null;
