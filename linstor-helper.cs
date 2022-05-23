@@ -25,35 +25,18 @@ class Program
 
 	private static ManagementObject GetDiskForVirtualDisk(ManagementBaseObject vdisk)
 	{
-		// var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Associators Of {MSFT_VirtualDisk.ObjectID="+vdisk["ObjectID"]+"}");
-		// var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Associators Of {MSFT_VirtualDisk} where ClassDefsOnly");
-		// var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='"+vdisk["ObjectID"]+"'} where ClassDefsOnly";
-		// var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='"+vdisk["ObjectID"]+"'}";
-		// var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='{1}\\\\\\\\SERVER2019-1\\\\root/Microsoft/Windows/Storage/Providers_v2\\SPACES_VirtualDisk.ObjectId=\\\"{33fba0cb-bf8f-11ec-9b04-806e6f6e6963}:VD:{3143d14e-abf2-4bba-bc1d-7cf19ae0ba48}{0b274417-075e-4864-8d1f-ae605634c414}\\\"'}";
-		// var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='%7b1%7d%5c%5cSERVER2019-1%5croot/Microsoft/Windows/Storage/Providers_v2%5c%5cSPACES_VirtualDisk.ObjectId=%22%7b33fba0cb-bf8f-11ec-9b04-806e6f6e6963%7d:VD:%7b3143d14e-abf2-4bba-bc1d-7cf19ae0ba48%7d%7b0b274417-075e-4864-8d1f-ae605634c414%7d%22'}";
-		// var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='%7b1%7d'}"; /* works */
-		// var query_string = "Associators Of {MSFT_VirtualDisk.ObjectId='"+Uri.EscapeUriString(vdisk["ObjectID"].ToString())+"'}";
-//		var query_string = "Associators Of {MSFT_VirtualDisk.ObjectID='"+Uri.EscapeUriString(vdisk["ObjectID"].ToString())+"'} where ClassDefsOnly"; /* not found */
-//		var query_string = "Associators Of {MSFT_VirtualDisk.ObjectId="+Uri.EscapeUriString(vdisk["ObjectID"].ToString())+"} where ClassDefsOnly";
-
-		// var query_string = String.format("select * from MSFT_VirtualDiskToDisk where virtualdisk={0}", vdisk);
-//		var query_string = "select * from MSFT_VirtualDiskToDisk";
-
-
-		var quoted_object_id = vdisk["ObjectId"].ToString().Replace(@"\", @"\\").Replace(@"""", @"\""");
-Console.WriteLine(quoted_object_id);
-string query_string = @"Associators of {"
+		string quoted_object_id = vdisk["ObjectId"].
+			ToString().Replace(@"\", @"\\").Replace(@"""", @"\""");
+		string query_string = @"Associators of {"
                      + @"MSFT_VirtualDisk.ObjectId="""
 		     + quoted_object_id
-                     + @"""} ";
-                     // + @"""} ";
-                    //  + @"Where ClassDefsOnly";
-                     // + @"Where AssocClass = Win32_Directory ResultRole = PartComponent";
+                     + @"""} "
+                     // + @"Where AssocClass = MSFT_Disk";
+                     + @"Where AssocClass = MSFT_VirtualDiskToDisk";
 
 Console.WriteLine(query_string);
 		
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
-	//	var query = new ManagementObjectSearcher("ROOT\\cimv2", query_string);
 		var res = query.Get();
 Console.WriteLine("res.Count is "+res.Count);
 		ManagementObject[] arr = { null };
@@ -64,14 +47,11 @@ Console.WriteLine("res.Count is "+res.Count);
 				Console.WriteLine("FriendlyName: {0}", obj["FriendlyName"]);
 			} catch (System.Management.ManagementException e) {
 				Console.WriteLine("exception "+e);
-				Console.WriteLine("exception 123");
 			}
 		}
-/*
 		if (res.Count != 1) {
 			throw new Exception("Expected Disk object for Virtual Disk with object ID "+vdisk["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
 		}
-*/
 		res.CopyTo(arr, 0);
 		return arr[0];
 	}
