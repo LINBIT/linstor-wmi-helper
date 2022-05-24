@@ -1,4 +1,4 @@
-EXE=linstor-helper.exe
+EXE=linstor-wmi-helper.exe
 
 all: $(EXE)
 
