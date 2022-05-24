@@ -4,6 +4,10 @@ using System.Management;
 class Program
 {
 	private static ManagementClass StoragePoolClass;
+	private static ManagementClass DiskClass;
+
+	private static ulong GPTOverhead = 130*1024*1024;
+	private static ulong PartitionOffset = 129*1024*1024;
 
 	private static ManagementObjectCollection GetStoragePools()
 	{
@@ -31,23 +35,12 @@ class Program
                      + @"MSFT_VirtualDisk.ObjectId="""
 		     + quoted_object_id
                      + @"""} "
-                     // + @"Where AssocClass = MSFT_Disk";
                      + @"Where AssocClass = MSFT_VirtualDiskToDisk";
 
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
 		var res = query.Get();
 		ManagementObject[] arr = { null };
 
-/*
-		foreach (ManagementObject obj in res) {
-			// Console.WriteLine("Disk: {0} VirtualDisk: {1}", obj["Disk"], obj["VirtualDisk"]);
-			try {
-				Console.WriteLine("FriendlyName: {0}", obj["FriendlyName"]);
-			} catch (System.Management.ManagementException e) {
-				Console.WriteLine("exception "+e);
-			}
-		}
-*/
 		if (res.Count != 1) {
 			throw new Exception("Expected Disk object for Virtual Disk with object ID "+vdisk["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
 		}
@@ -58,6 +51,42 @@ class Program
 	private static void InitializeWMIClasses()
 	{
 		StoragePoolClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_StoragePool");
+		DiskClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_Disk");
+	}
+
+	private static void InitializeDisk(ManagementObject disk)
+	{
+		ManagementBaseObject p = DiskClass.GetMethodParameters("Initialize");
+		p["PartitionStyle"] = 2;	/* GPT */
+		ManagementBaseObject ret = disk.InvokeMethod("Initialize", p, null);
+
+		Console.WriteLine("retval "+ret["ReturnValue"]);
+		Console.WriteLine("status "+ret["ExtendedStatus"]);
+
+/*
+		if (p["ReturnValue"] != UInt32(0)) {
+			throw new Exception("Couldn't initialize new virtual disk error is "+p["ReturnValue"]);
+		}
+*/
+	}
+
+	private static void CreatePartition(ManagementObject disk, ulong size, ulong offset)
+	{
+		ManagementBaseObject p = DiskClass.GetMethodParameters("CreatePartition");
+		p["Size"] = size;
+		p["Offset"] = offset;
+			/* Rest are default values */
+
+		ManagementBaseObject ret = disk.InvokeMethod("CreatePartition", p, null);
+
+		Console.WriteLine("create partition retval "+ret["ReturnValue"]);
+		Console.WriteLine("create partition status "+ret["ExtendedStatus"]);
+
+/*
+		if (p["ReturnValue"] != UInt32(0)) {
+			throw new Exception("Couldn't initialize new virtual disk error is "+p["ReturnValue"]);
+		}
+*/
 	}
 
 		/* This calls the WMI method CreateVirtualDisk of the 
@@ -67,16 +96,10 @@ class Program
 
 	private static ManagementObject CreateVirtualDisk(ManagementObject pool, string friendly_name, ulong size, bool thin)
 	{
-/*
-		Console.Write("About to call GetDiskForVirtualDisk ...\n");
-		ManagementObject Xdisk = GetDiskForVirtualDisk(null);
-		return null;
-*/
-
 		Console.Write("About to create virtual disk "+friendly_name+" with "+size+" bytes\n");
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("CreateVirtualDisk");
 		p["FriendlyName"] = friendly_name;
-		p["Size"] = size;
+		p["Size"] = size + GPTOverhead;
 		p["ProvisioningType"] = thin ? 1 : 2;
 		p["ResiliencySettingName"] = "Simple"; /* no RAID for now */
 		p["Usage"] = 1;
@@ -91,6 +114,8 @@ class Program
 			Console.WriteLine("class is "+vdisk.ClassPath);
 			ManagementObject disk = GetDiskForVirtualDisk(vdisk);
 			Console.WriteLine("disk class is "+disk.ClassPath);
+			InitializeDisk(disk);
+			CreatePartition(disk, size, PartitionOffset);
 		}
 
 		return null;
@@ -99,7 +124,6 @@ class Program
 	public static void Main(string[] args)
 	{
 		InitializeWMIClasses();
-		// var pools = GetStoragePools();
 		Console.Write(args.Length+" args");
 		if (args.Length < 1) {
 			Console.WriteLine("Usage: linstor-helper <storage-pool-friendly-name>");
