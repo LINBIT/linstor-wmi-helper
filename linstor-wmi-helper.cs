@@ -117,13 +117,12 @@ Console.WriteLine("after invoke ...");
 	{
 		ManagementBaseObject vdisk = CreateVirtualDisk(pool, friendly_name, size, thin);
 
-		if (vdisk != null) {
-			Console.WriteLine("class is "+vdisk.ClassPath);
-			ManagementObject disk = GetDiskForVirtualDisk(vdisk);
-			Console.WriteLine("disk class is "+disk.ClassPath);
-			InitializeDisk(disk);
-			CreatePartition(disk, size, PartitionOffset);
-		}
+		if (vdisk == null)
+			throw new Exception("CreateVirtualDisk returned null as object");
+
+		ManagementObject disk = GetDiskForVirtualDisk(vdisk);
+		InitializeDisk(disk);
+		CreatePartition(disk, size, PartitionOffset);
 	}
 
 	public static void Main(string[] args)
