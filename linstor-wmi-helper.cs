@@ -90,13 +90,12 @@ class Program
 		 * create a virtual disk on this storage pool.
 		 */
 
-	private static ManagementObject CreateVirtualDisk(ManagementObject pool, string friendly_name, ulong size, bool thin)
+	private static ManagementBaseObject CreateVirtualDisk(ManagementObject pool, string friendly_name, ulong size, bool thin)
 	{
 		Console.Write("About to create virtual disk "+friendly_name+" with "+size+" bytes\n");
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("CreateVirtualDisk");
 		p["FriendlyName"] = friendly_name;
-//		p["Size"] = size + GPTOverhead;
-p["Size"] = size - 1*1024*1024*1024; /* 1GB less */
+		p["Size"] = size + GPTOverhead;
 		p["ProvisioningType"] = thin ? 1 : 2;
 		p["ResiliencySettingName"] = "Simple"; /* no RAID for now */
 		p["Usage"] = 1;
@@ -108,7 +107,16 @@ Console.WriteLine("after invoke ...");
 		Console.WriteLine("status "+ret["ExtendedStatus"]);
 		Console.WriteLine("virtualdisk "+ret["CreatedVirtualDisk"]);
 
-		ManagementBaseObject vdisk = (ManagementBaseObject) ret["CreatedVirtualDisk"];
+		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
+			throw new Exception("Couldn't create virtual disk error is "+ret["ReturnValue"]);
+		}
+		return (ManagementBaseObject) ret["CreatedVirtualDisk"];
+	}
+
+	private static void CreateVirtualDiskWithPartition(ManagementObject pool, string friendly_name, ulong size, bool thin)
+	{
+		ManagementBaseObject vdisk = CreateVirtualDisk(pool, friendly_name, size, thin);
+
 		if (vdisk != null) {
 			Console.WriteLine("class is "+vdisk.ClassPath);
 			ManagementObject disk = GetDiskForVirtualDisk(vdisk);
@@ -116,8 +124,6 @@ Console.WriteLine("after invoke ...");
 			InitializeDisk(disk);
 			CreatePartition(disk, size, PartitionOffset);
 		}
-
-		return null;
 	}
 
 	public static void Main(string[] args)
@@ -131,7 +137,7 @@ Console.WriteLine("after invoke ...");
 		if (args[0] == "virtual-disk") {
 			if (args[1] == "create") {
 				var the_pool = GetStoragePoolByFriendlyName(args[2]);
-				var disk = CreateVirtualDisk(the_pool, args[3], ulong.Parse(args[4]), args[5] == "thin");
+				CreateVirtualDiskWithPartition(the_pool, args[3], ulong.Parse(args[4]), args[5] == "thin");
 				return;
 			}
 		}
