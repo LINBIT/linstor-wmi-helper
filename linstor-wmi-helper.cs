@@ -1,7 +1,7 @@
 using System;
 using System.Management;
 
-class Program
+class LinstorWMIHelper
 {
 	private static ManagementClass StoragePoolClass;
 	private static ManagementClass DiskClass;
