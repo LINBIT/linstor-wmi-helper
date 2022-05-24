@@ -60,9 +60,6 @@ class Program
 		p["PartitionStyle"] = 2;	/* GPT */
 		ManagementBaseObject ret = disk.InvokeMethod("Initialize", p, null);
 
-		Console.WriteLine("retval "+ret["ReturnValue"]);
-		Console.WriteLine("status "+ret["ExtendedStatus"]);
-
 		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
 			throw new Exception("Couldn't initialize new virtual disk error is "+ret["ReturnValue"]);
 		}
@@ -76,9 +73,6 @@ class Program
 			/* Rest are default values */
 
 		ManagementBaseObject ret = disk.InvokeMethod("CreatePartition", p, null);
-
-		Console.WriteLine("create partition retval "+ret["ReturnValue"]);
-		Console.WriteLine("create partition status "+ret["ExtendedStatus"]);
 
 		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
 			throw new Exception("Couldn't create partition on new virtual disk error is "+ret["ReturnValue"]);
@@ -100,12 +94,7 @@ class Program
 		p["ResiliencySettingName"] = "Simple"; /* no RAID for now */
 		p["Usage"] = 1;
 		p["OtherUsageDescription"] = "WinDRBD backing disk";
-Console.WriteLine("before invoke ...");
 		ManagementBaseObject ret = pool.InvokeMethod("CreateVirtualDisk", p, null);
-Console.WriteLine("after invoke ...");
-		Console.WriteLine("retval "+ret["ReturnValue"]);
-		Console.WriteLine("status "+ret["ExtendedStatus"]);
-		Console.WriteLine("virtualdisk "+ret["CreatedVirtualDisk"]);
 
 		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
 			throw new Exception("Couldn't create virtual disk error is "+ret["ReturnValue"]);
@@ -128,7 +117,6 @@ Console.WriteLine("after invoke ...");
 	public static void Main(string[] args)
 	{
 		InitializeWMIClasses();
-		Console.Write(args.Length+" args");
 		if (args.Length < 1) {
 			Console.WriteLine("Usage: linstor-helper <storage-pool-friendly-name>");
 			return;
