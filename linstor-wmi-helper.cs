@@ -63,11 +63,9 @@ class Program
 		Console.WriteLine("retval "+ret["ReturnValue"]);
 		Console.WriteLine("status "+ret["ExtendedStatus"]);
 
-/*
-		if (p["ReturnValue"] != UInt32(0)) {
-			throw new Exception("Couldn't initialize new virtual disk error is "+p["ReturnValue"]);
+		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
+			throw new Exception("Couldn't initialize new virtual disk error is "+ret["ReturnValue"]);
 		}
-*/
 	}
 
 	private static void CreatePartition(ManagementObject disk, ulong size, ulong offset)
@@ -82,11 +80,9 @@ class Program
 		Console.WriteLine("create partition retval "+ret["ReturnValue"]);
 		Console.WriteLine("create partition status "+ret["ExtendedStatus"]);
 
-/*
-		if (p["ReturnValue"] != UInt32(0)) {
-			throw new Exception("Couldn't initialize new virtual disk error is "+p["ReturnValue"]);
+		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
+			throw new Exception("Couldn't create partition on new virtual disk error is "+ret["ReturnValue"]);
 		}
-*/
 	}
 
 		/* This calls the WMI method CreateVirtualDisk of the 
@@ -99,12 +95,15 @@ class Program
 		Console.Write("About to create virtual disk "+friendly_name+" with "+size+" bytes\n");
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("CreateVirtualDisk");
 		p["FriendlyName"] = friendly_name;
-		p["Size"] = size + GPTOverhead;
+//		p["Size"] = size + GPTOverhead;
+p["Size"] = size - 1*1024*1024*1024; /* 1GB less */
 		p["ProvisioningType"] = thin ? 1 : 2;
 		p["ResiliencySettingName"] = "Simple"; /* no RAID for now */
 		p["Usage"] = 1;
 		p["OtherUsageDescription"] = "WinDRBD backing disk";
+Console.WriteLine("before invoke ...");
 		ManagementBaseObject ret = pool.InvokeMethod("CreateVirtualDisk", p, null);
+Console.WriteLine("after invoke ...");
 		Console.WriteLine("retval "+ret["ReturnValue"]);
 		Console.WriteLine("status "+ret["ExtendedStatus"]);
 		Console.WriteLine("virtualdisk "+ret["CreatedVirtualDisk"]);
