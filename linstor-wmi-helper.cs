@@ -138,31 +138,20 @@ class LinstorWMIHelper
 	public static void Main(string[] args)
 	{
 		InitializeWMIClasses();
-		if (args.Length < 1) {
-			Console.WriteLine("Usage: linstor-helper <storage-pool-friendly-name>");
-			return;
-		}
-		if (args[0] == "virtual-disk") {
-			if (args[1] == "create") {
+
+		if (args.Length > 1 && args[0] == "virtual-disk") {
+			if (args.Length == 6 && args[1] == "create") {
 				var the_pool = GetStoragePoolByFriendlyName(args[2]);
 				CreateVirtualDiskWithPartition(the_pool, args[3], ulong.Parse(args[4]), args[5] == "thin");
 				return;
 			}
+			if (args.Length == 3 && args[1] == "list") {
+				// PrintVirtualDiskInfo(args[2]);
+Console.WriteLine("ok");
+				return;
+			}
 		}
-
-		var pool = GetStoragePoolByFriendlyName(args[0]);
-
-		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("GetSupportedSize");
-		p["ResiliencySettingName"] = "Simple";
-
-		Console.WriteLine("Instance "+pool["FriendlyName"]);
-		ManagementBaseObject r = pool.InvokeMethod("GetSupportedSize", p, null);
-
-		Console.WriteLine("Max Size "+r["VirtualDiskSizeMax"]);
-		Console.WriteLine("Min Size "+r["VirtualDiskSizeMin"]);
-		Console.WriteLine("Divisor "+r["VirtualDiskSizeDivisor"]);
-		Console.WriteLine("retval "+r["ReturnValue"]);
-		Console.WriteLine("status "+r["ExtendedStatus"]);
-		Console.WriteLine("supported sizes "+r["SupportedSizes"]);
+		Console.WriteLine("Usage: linstor-wmi-helper virtual-disk create <storage-pool-friendly-name> <newdisk-friendly-name> <size-in-bytes> <thin-or-thick>");
+		Console.WriteLine("       linstor-wmi-helper virtual-disk list <pattern>");
 	}
 }
