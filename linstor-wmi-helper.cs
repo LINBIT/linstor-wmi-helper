@@ -69,7 +69,7 @@ class LinstorWMIHelper
 		return arr[0];
 	}
 
-	private static ManagementObject GetPartitionsForDisk(ManagementBaseObject disk, String assoc_class, int partition_number)
+	private static ManagementObjectCollection GetPartitionsForDisk(ManagementBaseObject disk, String assoc_class, int partition_number)
 	{
 		string quoted_object_id = disk["ObjectId"].
 			ToString().Replace(@"\", @"\\").Replace(@"""", @"\""");
@@ -77,18 +77,10 @@ class LinstorWMIHelper
                      + disk.ClassPath + @".ObjectId="""
 		     + quoted_object_id
                      + @"""} "
-                     + @"Where AssocClass = "+assoc_class
-                     + @"And PartitionNumber = "+partition_number;
+                     + @"Where AssocClass = "+assoc_class;
 
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
-		var res = query.Get();
-		ManagementObject[] arr = { null };
-
-		if (res.Count != 1) {
-			throw new Exception("Expected "+assoc_class+" object for "+disk.ClassPath+" with object ID "+disk["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
-		}
-		res.CopyTo(arr, 0);
-		return arr[0];
+		return query.Get();
 	}
 
 	private static ManagementObject GetDiskForVirtualDisk(ManagementBaseObject vdisk)
@@ -173,14 +165,22 @@ class LinstorWMIHelper
 		foreach (var vdisk in vdisks) {
 			ManagementBaseObject pool = GetStoragePoolForVirtualDisk(vdisk);
 			ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
-			ManagementBaseObject partition2 = GetPartitionsForDisk(disk, "MSFT_DiskToPartition", 2);
+			ManagementObjectCollection partitions = GetPartitionsForDisk(disk, "MSFT_DiskToPartition", 2);
+			ManagementBaseObject partition2 = null;
+			foreach (var p in partitions) {
+				if (int.Parse(p["PartitionNumber"].ToString()) == 2) {
+					partition2 = p;
+					break;
+				}
+			}
 
-			Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", 
-				vdisk["Size"].ToString(),
-				vdisk["FriendlyName"].ToString(),
-				pool["FriendlyName"].ToString(),
-				partition2["Size"].ToString(),
-				partition2["Guid"]);
+			if (partition2 != null)
+				Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", 
+					vdisk["Size"].ToString(),
+					vdisk["FriendlyName"].ToString(),
+					pool["FriendlyName"].ToString(),
+					partition2["Size"].ToString(),
+					partition2["Guid"]);
 		}
 	}
 
