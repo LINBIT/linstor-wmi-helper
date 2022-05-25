@@ -227,17 +227,23 @@ class LinstorWMIHelper
 	{
 		var vdisk = GetVirtualDiskByFriendlyName(name);
 		var partition = GetDataPartition(vdisk);
+		var vdisk_size = ulong.Parse(vdisk["Size"].ToString());
+		var requested_vdisk_size = size + GPTOverhead;
 
 		if (partition == null) {
 			throw new Exception("No data partition in disk "+name+", was it created by linstor-wmi-helper?");
 		}
 
-		var p = VirtualDiskClass.GetMethodParameters("Resize");
-		p["Size"] = size + GPTOverhead;
-		var ret = vdisk.InvokeMethod("Resize", p, null);
+		if (requested_vdisk_size > vdisk_size) {
+			var p = VirtualDiskClass.GetMethodParameters("Resize");
+			p["Size"] = requested_vdisk_size;
+			var ret = vdisk.InvokeMethod("Resize", p, null);
 
-		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
-			throw new Exception("Couldn't resize virtual disk error is "+ret["ReturnValue"]);
+			if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
+				throw new Exception("Couldn't resize virtual disk error is "+ret["ReturnValue"]);
+			}
+		} else {
+			Console.WriteLine("Warning: Cannot shrink virtual disk "+name+" from "+vdisk_size+" to "+requested_vdisk_size+" bytes, only resizing data partition.");
 		}
 
 		var p2 = PartitionClass.GetMethodParameters("Resize");
