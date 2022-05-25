@@ -14,17 +14,38 @@ class LinstorWMIHelper
 		return StoragePoolClass.GetInstances();
 	}
 
-	private static ManagementObject GetStoragePoolByFriendlyName(String name)
+	private static ManagementObject GetObjectByFriendlyName(String name, String classname)
 	{
-		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Select * From MSFT_StoragePool Where FriendlyName = '"+name+"'");
+		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Select * From "+classname+" Where FriendlyName = '"+name+"'");
 		var res = query.Get();
 		ManagementObject[] arr = { null };
 
 		if (res.Count != 1) {
-			throw new Exception("Expected Storage Pool with friendly name "+name+" to exist and be unique, I got "+res.Count+" objects.");
+			throw new Exception("Expected "+classname+" with friendly name "+name+" to exist and be unique, I got "+res.Count+" objects.");
 		}
 		res.CopyTo(arr, 0);
 		return arr[0];
+	}
+
+	private static ManagementObjectCollection GetObjectsByPattern(String pattern, String classname)
+	{
+		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Select * From "+classname+" Where FriendlyName LIKE '"+pattern+"'");
+		return query.Get();
+	}
+
+	private static ManagementObject GetStoragePoolByFriendlyName(String name)
+	{
+		return GetObjectByFriendlyName(name, "MSFT_StoragePool");
+	}
+
+	private static ManagementObject GetVirtualDiskByFriendlyName(String name)
+	{
+		return GetObjectByFriendlyName(name, "MSFT_VirtualDisk");
+	}
+
+	private static ManagementObjectCollection GetVirtualDisksByPattern(String pattern)
+	{
+		return GetObjectsByPattern(pattern, "MSFT_VirtualDisk");
 	}
 
 	private static ManagementObject GetDiskForVirtualDisk(ManagementBaseObject vdisk)
