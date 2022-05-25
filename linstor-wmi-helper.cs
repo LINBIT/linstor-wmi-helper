@@ -55,15 +55,15 @@ class LinstorWMIHelper
 		string query_string = @"Associators of {"
                      + obj.ClassPath + @".ObjectId="""
 		     + quoted_object_id
-                     + @"""} "
-                     + @"Where AssocClass = "+assoc_class;
+                     + @"""} " ;
+//                     + @"Where AssocClass = "+assoc_class;
 
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
 		var res = query.Get();
 		ManagementObject[] arr = { null };
 
 		if (res.Count != 1) {
-			throw new Exception("Expected Disk object for Virtual Disk with object ID "+obj["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
+			throw new Exception("Expected "+assoc_class+" object for "+obj.ClassPath+" with object ID "+obj["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
 		}
 		res.CopyTo(arr, 0);
 		return arr[0];
