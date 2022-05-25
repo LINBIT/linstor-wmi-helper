@@ -3,6 +3,13 @@ using System.Management;
 
 class LinstorWMIHelper
 {
+
+		/* WMI is unfortunately very slow especially when
+		 * enumerating. See
+		 * https://social.msdn.microsoft.com/Forums/en-US/6c13d669-389c-47e5-8d61-dce3c8ac30f7/why-is-wmi-so-slow 
+		 * for some insights on this topic.
+		 */
+
 	private static ManagementClass StoragePoolClass;
 	private static ManagementClass DiskClass;
 	private static ManagementClass VirtualDiskClass;
@@ -282,6 +289,14 @@ class LinstorWMIHelper
 				return;
 			}
 		}
+		if (args.Length > 1 && args[0] == "storage-pool") {
+			if (args.Length == 3 && args[1] == "get-sizes") {
+				var the_pool = GetStoragePoolByFriendlyName(args[2]);
+				Console.WriteLine("{0} {1}", the_pool["Size"], the_pool["AllocatedSize"]);
+				return;
+			}
+		}
+
 		Console.WriteLine("Usage: linstor-wmi-helper virtual-disk create <storage-pool-friendly-name> <newdisk-friendly-name> <size-in-bytes> <thin-or-thick>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk list <pattern>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk delete <disk-friendly-name>");
