@@ -5,6 +5,7 @@ class LinstorWMIHelper
 {
 	private static ManagementClass StoragePoolClass;
 	private static ManagementClass DiskClass;
+	private static ManagementClass VirtualDiskClass;
 
 	private static ulong GPTOverhead = 130*1024*1024;
 	private static ulong PartitionOffset = 129*1024*1024;
@@ -97,6 +98,7 @@ class LinstorWMIHelper
 	{
 		StoragePoolClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_StoragePool");
 		DiskClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_Disk");
+		VirtualDiskClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_VirtualDisk");
 	}
 
 	private static void InitializeDisk(ManagementObject disk)
@@ -182,12 +184,22 @@ class LinstorWMIHelper
 					partition2["Size"].ToString(),
 					partition2["Guid"]);
 			} else {
-				Console.WriteLine("{0} has no partition 2",
+				Console.WriteLine("{0} has no partition 2, was it created by linstor-wmi-helper?",
 					vdisk["FriendlyName"].ToString());
 			}
 		}
 	}
 
+	private static void DeleteVirtualDisk(String name)
+	{
+		var vdisk = GetVirtualDiskByFriendlyName(name);
+		ManagementBaseObject p = VirtualDiskClass.GetMethodParameters("DeleteObject");
+		ManagementBaseObject ret = vdisk.InvokeMethod("DeleteObject", p, null);
+
+		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
+			throw new Exception("Couldn't delete virtual disk error is "+ret["ReturnValue"]);
+		}
+	}
 
 	public static void Main(string[] args)
 	{
@@ -203,9 +215,14 @@ class LinstorWMIHelper
 				PrintVirtualDiskInfo(args[2]);
 				return;
 			}
+			if (args.Length == 3 && args[1] == "delete") {
+				DeleteVirtualDisk(args[2]);
+				return;
+			}
 		}
 		Console.WriteLine("Usage: linstor-wmi-helper virtual-disk create <storage-pool-friendly-name> <newdisk-friendly-name> <size-in-bytes> <thin-or-thick>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk list <pattern>");
+		Console.WriteLine("       linstor-wmi-helper virtual-disk delete <disk-friendly-name>");
 		Environment.ExitCode = 1;
 	}
 }
