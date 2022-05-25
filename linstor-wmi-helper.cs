@@ -190,14 +190,27 @@ class LinstorWMIHelper
 		}
 	}
 
-	private static void DeleteVirtualDisk(String name)
+	private static void DeleteVirtualDisk(ManagementObject vdisk)
 	{
-		var vdisk = GetVirtualDiskByFriendlyName(name);
 		ManagementBaseObject p = VirtualDiskClass.GetMethodParameters("DeleteObject");
 		ManagementBaseObject ret = vdisk.InvokeMethod("DeleteObject", p, null);
 
 		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
 			throw new Exception("Couldn't delete virtual disk error is "+ret["ReturnValue"]);
+		}
+	}
+
+	private static void DeleteVirtualDisk(String name)
+	{
+		var vdisk = GetVirtualDiskByFriendlyName(name);
+		DeleteVirtualDisk(vdisk);
+	}
+
+	private static void DeleteVirtualDisksByPattern(String pattern)
+	{
+		var vdisks = GetVirtualDisksByPattern(pattern);
+		foreach (var vdisk in vdisks) {
+			DeleteVirtualDisk((ManagementObject) vdisk);
 		}
 	}
 
@@ -219,10 +232,15 @@ class LinstorWMIHelper
 				DeleteVirtualDisk(args[2]);
 				return;
 			}
+			if (args.Length == 3 && args[1] == "delete-all") {
+				DeleteVirtualDisksByPattern(args[2]);
+				return;
+			}
 		}
 		Console.WriteLine("Usage: linstor-wmi-helper virtual-disk create <storage-pool-friendly-name> <newdisk-friendly-name> <size-in-bytes> <thin-or-thick>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk list <pattern>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk delete <disk-friendly-name>");
+		Console.WriteLine("       linstor-wmi-helper virtual-disk delete-all <pattern>");
 		Environment.ExitCode = 1;
 	}
 }
