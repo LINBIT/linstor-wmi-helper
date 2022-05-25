@@ -6,6 +6,7 @@ class LinstorWMIHelper
 	private static ManagementClass StoragePoolClass;
 	private static ManagementClass DiskClass;
 	private static ManagementClass VirtualDiskClass;
+	private static ManagementClass PartitionClass;
 
 	private static ulong GPTOverhead = 130*1024*1024;
 	private static ulong PartitionOffset = 129*1024*1024;
@@ -99,6 +100,7 @@ class LinstorWMIHelper
 		StoragePoolClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_StoragePool");
 		DiskClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_Disk");
 		VirtualDiskClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_VirtualDisk");
+		PartitionClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_Partition");
 	}
 
 	private static void InitializeDisk(ManagementObject disk)
@@ -136,7 +138,7 @@ class LinstorWMIHelper
 		Console.Write("About to create virtual disk "+friendly_name+" with "+size+" bytes\n");
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("CreateVirtualDisk");
 		p["FriendlyName"] = friendly_name;
-		p["Size"] = size + GPTOverhead;
+		p["Size"] = size;
 		p["ProvisioningType"] = thin ? 1 : 2;
 		p["ResiliencySettingName"] = "Simple"; /* no RAID for now */
 		p["Usage"] = 1;
@@ -151,7 +153,7 @@ class LinstorWMIHelper
 
 	private static void CreateVirtualDiskWithPartition(ManagementObject pool, string friendly_name, ulong size, bool thin)
 	{
-		ManagementBaseObject vdisk = CreateVirtualDisk(pool, friendly_name, size, thin);
+		ManagementBaseObject vdisk = CreateVirtualDisk(pool, friendly_name, size + GPTOverhead, thin);
 
 		if (vdisk == null)
 			throw new Exception("CreateVirtualDisk returned null as object");
@@ -224,13 +226,26 @@ class LinstorWMIHelper
 	private static void ResizeVirtualDisk(String name, ulong size)
 	{
 		var vdisk = GetVirtualDiskByFriendlyName(name);
+		var partition = GetDataPartition(vdisk);
+
+		if (partition == null) {
+			throw new Exception("No data partition in disk "+name+", was it created by linstor-wmi-helper?");
+		}
 
 		var p = VirtualDiskClass.GetMethodParameters("Resize");
-		p["Size"] = size;
+		p["Size"] = size + GPTOverhead;
 		var ret = vdisk.InvokeMethod("Resize", p, null);
 
 		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
 			throw new Exception("Couldn't resize virtual disk error is "+ret["ReturnValue"]);
+		}
+
+		var p2 = PartitionClass.GetMethodParameters("Resize");
+		p2["Size"] = size;
+		var ret2 = partition.InvokeMethod("Resize", p2, null);
+
+		if (ulong.Parse(ret2["ReturnValue"].ToString()) != 0) {
+			throw new Exception("Couldn't resize partition insize virtual disk error is "+ret2["ReturnValue"]);
 		}
 	}
 
