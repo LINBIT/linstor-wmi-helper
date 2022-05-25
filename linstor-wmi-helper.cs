@@ -55,8 +55,8 @@ class LinstorWMIHelper
 		string query_string = @"Associators of {"
                      + obj.ClassPath + @".ObjectId="""
 		     + quoted_object_id
-                     + @"""} " ;
-//                     + @"Where AssocClass = "+assoc_class;
+                     + @"""} "
+                     + @"Where AssocClass = "+assoc_class;
 
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
 		var res = query.Get();
