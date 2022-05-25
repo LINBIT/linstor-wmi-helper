@@ -69,6 +69,28 @@ class LinstorWMIHelper
 		return arr[0];
 	}
 
+	private static ManagementObject GetPartitionsForDisk(ManagementBaseObject disk, String assoc_class, int partition_number)
+	{
+		string quoted_object_id = disk["ObjectId"].
+			ToString().Replace(@"\", @"\\").Replace(@"""", @"\""");
+		string query_string = @"Associators of {"
+                     + disk.ClassPath + @".ObjectId="""
+		     + quoted_object_id
+                     + @"""} "
+                     + @"Where AssocClass = "+assoc_class
+                     + @"And PartitionNumber = "+partition_number;
+
+		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
+		var res = query.Get();
+		ManagementObject[] arr = { null };
+
+		if (res.Count != 1) {
+			throw new Exception("Expected "+assoc_class+" object for "+disk.ClassPath+" with object ID "+disk["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
+		}
+		res.CopyTo(arr, 0);
+		return arr[0];
+	}
+
 	private static ManagementObject GetDiskForVirtualDisk(ManagementBaseObject vdisk)
 	{
 		return GetAssociatedObject(vdisk, "MSFT_VirtualDiskToDisk");
@@ -151,11 +173,14 @@ class LinstorWMIHelper
 		foreach (var vdisk in vdisks) {
 			ManagementBaseObject pool = GetStoragePoolForVirtualDisk(vdisk);
 			ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
+			ManagementBaseObject partition2 = GetPartitionsForDisk(disk, "MSFT_DiskToPartition", 2);
 
-			Console.WriteLine("{0}\t{1}\t{2}", 
+			Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", 
 				vdisk["Size"].ToString(),
 				vdisk["FriendlyName"].ToString(),
-				pool["FriendlyName"].ToString());
+				pool["FriendlyName"].ToString(),
+				partition2["Size"].ToString(),
+				partition2["Guid"]);
 		}
 	}
 
