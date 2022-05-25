@@ -135,6 +135,15 @@ class LinstorWMIHelper
 		CreatePartition(disk, size, PartitionOffset);
 	}
 
+	private static void PrintVirtualDiskInfo(String pattern)
+	{
+		var disks = GetVirtualDisksByPattern(pattern);
+		foreach (var disk in disks) {
+			Console.WriteLine("disk "+disk["FriendlyName"].ToString());
+		}
+	}
+
+
 	public static void Main(string[] args)
 	{
 		InitializeWMIClasses();
@@ -146,8 +155,7 @@ class LinstorWMIHelper
 				return;
 			}
 			if (args.Length == 3 && args[1] == "list") {
-				// PrintVirtualDiskInfo(args[2]);
-Console.WriteLine("ok");
+				PrintVirtualDiskInfo(args[2]);
 				return;
 			}
 		}
