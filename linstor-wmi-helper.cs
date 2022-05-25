@@ -70,7 +70,7 @@ class LinstorWMIHelper
 		return arr[0];
 	}
 
-	private static ManagementObjectCollection GetPartitionsForDisk(ManagementBaseObject disk, String assoc_class, int partition_number)
+	private static ManagementObjectCollection GetPartitionsForDisk(ManagementBaseObject disk, String assoc_class)
 	{
 		string quoted_object_id = disk["ObjectId"].
 			ToString().Replace(@"\", @"\\").Replace(@"""", @"\""");
@@ -161,20 +161,27 @@ class LinstorWMIHelper
 		CreatePartition(disk, size, PartitionOffset);
 	}
 
+	private static ManagementObject GetDataPartition(ManagementBaseObject vdisk)
+	{
+		ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
+		ManagementObjectCollection partitions = GetPartitionsForDisk(disk, "MSFT_DiskToPartition");
+		ManagementBaseObject partition2 = null;
+
+		foreach (var p in partitions) {
+			if (int.Parse(p["PartitionNumber"].ToString()) == 2) {
+				partition2 = p;
+				break;
+			}
+		}
+		return (ManagementObject) partition2;
+	}
+
 	private static void PrintVirtualDiskInfo(String pattern)
 	{
 		var vdisks = GetVirtualDisksByPattern(pattern);
 		foreach (var vdisk in vdisks) {
 			ManagementBaseObject pool = GetStoragePoolForVirtualDisk(vdisk);
-			ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
-			ManagementObjectCollection partitions = GetPartitionsForDisk(disk, "MSFT_DiskToPartition", 2);
-			ManagementBaseObject partition2 = null;
-			foreach (var p in partitions) {
-				if (int.Parse(p["PartitionNumber"].ToString()) == 2) {
-					partition2 = p;
-					break;
-				}
-			}
+			var partition2 = GetDataPartition(vdisk);
 
 			if (partition2 != null) {
 				Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", 
