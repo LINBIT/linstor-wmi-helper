@@ -174,13 +174,17 @@ class LinstorWMIHelper
 				}
 			}
 
-			if (partition2 != null)
+			if (partition2 != null) {
 				Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", 
 					vdisk["Size"].ToString(),
 					vdisk["FriendlyName"].ToString(),
 					pool["FriendlyName"].ToString(),
 					partition2["Size"].ToString(),
 					partition2["Guid"]);
+			} else {
+				Console.WriteLine("{0} has no partition 2",
+					vdisk["FriendlyName"].ToString());
+			}
 		}
 	}
 
