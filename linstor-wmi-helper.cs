@@ -153,5 +153,6 @@ Console.WriteLine("ok");
 		}
 		Console.WriteLine("Usage: linstor-wmi-helper virtual-disk create <storage-pool-friendly-name> <newdisk-friendly-name> <size-in-bytes> <thin-or-thick>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk list <pattern>");
+		Environment.ExitCode = 1;
 	}
 }
