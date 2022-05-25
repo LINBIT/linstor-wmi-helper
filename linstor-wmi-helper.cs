@@ -214,6 +214,19 @@ class LinstorWMIHelper
 		}
 	}
 
+	private static void ResizeVirtualDisk(String name, ulong size)
+	{
+		var vdisk = GetVirtualDiskByFriendlyName(name);
+
+		var p = VirtualDiskClass.GetMethodParameters("Resize");
+		p["Size"] = size;
+		var ret = vdisk.InvokeMethod("Resize", p, null);
+
+		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
+			throw new Exception("Couldn't resize virtual disk error is "+ret["ReturnValue"]);
+		}
+	}
+
 	public static void Main(string[] args)
 	{
 		InitializeWMIClasses();
@@ -236,11 +249,16 @@ class LinstorWMIHelper
 				DeleteVirtualDisksByPattern(args[2]);
 				return;
 			}
+			if (args.Length == 4 && args[1] == "resize") {
+				ResizeVirtualDisk(args[2], ulong.Parse(args[3]));
+				return;
+			}
 		}
 		Console.WriteLine("Usage: linstor-wmi-helper virtual-disk create <storage-pool-friendly-name> <newdisk-friendly-name> <size-in-bytes> <thin-or-thick>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk list <pattern>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk delete <disk-friendly-name>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk delete-all <pattern>");
+		Console.WriteLine("       linstor-wmi-helper virtual-disk resize <disk-friendly-name> <size-in-bytes>");
 		Environment.ExitCode = 1;
 	}
 }
