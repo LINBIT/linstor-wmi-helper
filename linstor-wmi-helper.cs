@@ -74,6 +74,11 @@ class LinstorWMIHelper
 		return GetAssociatedObject(vdisk, "MSFT_VirtualDiskToDisk");
 	}
 
+	private static ManagementObject GetStoragePoolForVirtualDisk(ManagementBaseObject vdisk)
+	{
+		return GetAssociatedObject(vdisk, "MSFT_StoragePoolToVirtualDisk");
+	}
+
 	private static void InitializeWMIClasses()
 	{
 		StoragePoolClass = new ManagementClass("\\\\.\\ROOT\\Microsoft\\Windows\\Storage:MSFT_StoragePool");
@@ -142,11 +147,15 @@ class LinstorWMIHelper
 
 	private static void PrintVirtualDiskInfo(String pattern)
 	{
-		var disks = GetVirtualDisksByPattern(pattern);
-		foreach (var disk in disks) {
-			Console.WriteLine("{0} {1}", 
-				disk["Size"].ToString(),
-				disk["FriendlyName"].ToString());
+		var vdisks = GetVirtualDisksByPattern(pattern);
+		foreach (var vdisk in vdisks) {
+			ManagementBaseObject pool = GetStoragePoolForVirtualDisk(vdisk);
+			ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
+
+			Console.WriteLine("{0}\t{1}\t{2}", 
+				vdisk["Size"].ToString(),
+				vdisk["FriendlyName"].ToString(),
+				pool["FriendlyName"].ToString());
 		}
 	}
 
