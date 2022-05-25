@@ -48,25 +48,30 @@ class LinstorWMIHelper
 		return GetObjectsByPattern(pattern, "MSFT_VirtualDisk");
 	}
 
-	private static ManagementObject GetDiskForVirtualDisk(ManagementBaseObject vdisk)
+	private static ManagementObject GetAssociatedObject(ManagementBaseObject obj, String assoc_class)
 	{
-		string quoted_object_id = vdisk["ObjectId"].
+		string quoted_object_id = obj["ObjectId"].
 			ToString().Replace(@"\", @"\\").Replace(@"""", @"\""");
 		string query_string = @"Associators of {"
-                     + @"MSFT_VirtualDisk.ObjectId="""
+                     + obj.ClassPath + @".ObjectId="""
 		     + quoted_object_id
                      + @"""} "
-                     + @"Where AssocClass = MSFT_VirtualDiskToDisk";
+                     + @"Where AssocClass = "+assoc_class;
 
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
 		var res = query.Get();
 		ManagementObject[] arr = { null };
 
 		if (res.Count != 1) {
-			throw new Exception("Expected Disk object for Virtual Disk with object ID "+vdisk["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
+			throw new Exception("Expected Disk object for Virtual Disk with object ID "+obj["ObjectID"]+" to exist and be unique, I got "+res.Count+" objects.");
 		}
 		res.CopyTo(arr, 0);
 		return arr[0];
+	}
+
+	private static ManagementObject GetDiskForVirtualDisk(ManagementBaseObject vdisk)
+	{
+		return GetAssociatedObject(vdisk, "MSFT_VirtualDiskToDisk");
 	}
 
 	private static void InitializeWMIClasses()
@@ -139,7 +144,9 @@ class LinstorWMIHelper
 	{
 		var disks = GetVirtualDisksByPattern(pattern);
 		foreach (var disk in disks) {
-			Console.WriteLine("disk "+disk["FriendlyName"].ToString());
+			Console.WriteLine("{0} {1}", 
+				disk["Size"].ToString(),
+				disk["FriendlyName"].ToString());
 		}
 	}
 
