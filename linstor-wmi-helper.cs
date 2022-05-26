@@ -241,7 +241,8 @@ class LinstorWMIHelper
 		if (partition == null) {
 			throw new Exception("No data partition in disk "+name+", was it created by linstor-wmi-helper?");
 		}
-		ResizeVirtualDisk(vdisk, size + GPTOverhead, true); /* TODO: compute size from MSR parition size */
+		ulong[] msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(vdisk);
+		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+64*1024, true);
 
 		var p2 = PartitionClass.GetMethodParameters("Resize");
 		p2["Size"] = size;
