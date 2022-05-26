@@ -202,15 +202,18 @@ Console.WriteLine("query string is "+query_string);
 		return GetPartition(vdisk, 2);
 	}
 
-	private static ulong GetSizeOfMSRPartition(ManagementBaseObject vdisk)
+	private static ulong[] GetSizeAndOffsetOfMSRPartition(ManagementBaseObject vdisk)
 	{
 		var msr_partition = GetMSRPartition(vdisk);
+		ulong[] ret = { 0, 0 };
 
 		if (msr_partition != null) {
-			return ulong.Parse(msr_partition["Size"].ToString());
+			ret[0] = ulong.Parse(msr_partition["Size"].ToString());
+			ret[1] = ulong.Parse(msr_partition["Offset"].ToString());
+		} else {
+			Console.WriteLine("Warning: no MSR partition on disk, is this a GPT disk?");
 		}
-		Console.WriteLine("Warning: no MSR partition on disk, is this a GPT disk?");
-		return 0;	/* No MSR partition, assume 0 */
+		return ret;	/* No MSR partition, assume 0 */
 	}
 
 	private static void ResizeVirtualDisk(ManagementObject vdisk, ulong size)
@@ -256,7 +259,7 @@ Console.WriteLine("query string is "+query_string);
 Console.WriteLine("vdisk_path is "+vdisk_path);
 		ManagementObject vdisk = GetVirtualDiskByObjectID(vdisk_path);
 		ulong offset;
-		ulong msr_partition_size;
+		ulong[] msr_partition_size_and_offset;
 
 		if (vdisk == null)
 			throw new Exception("CreateVirtualDisk returned null as object");
@@ -264,10 +267,15 @@ Console.WriteLine("vdisk_path is "+vdisk_path);
 		ManagementObject disk = GetDiskForVirtualDisk(vdisk);
 		InitializeDisk(disk);
 
-		msr_partition_size = GetSizeOfMSRPartition(vdisk);
-		ResizeVirtualDisk(vdisk, size+msr_partition_size+2*1024*1024); /* TODO: smaller header is 16KB query offset of MSRPartition? */
+		msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(vdisk);
+		// ResizeVirtualDisk(vdisk, size+msr_partition_size+2*1024*1024); /* TODO: smaller header is 16KB query offset of MSRPartition? */
+Console.WriteLine("{0} {1}", msr_partition_size_and_offset[0], msr_partition_size_and_offset[1]);
+		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]);
 
-		offset = msr_partition_size + 1024*1024;	/* again, smaller */
+		// offset = msr_partition_size + 1024*1024;	/* again, smaller */
+		// offset = msr_partition_size + 16*1024;
+		// offset = msr_partition_size + 17*1024;
+		offset = msr_partition_size_and_offset[0] + msr_partition_size_and_offset[1];
 		CreatePartition(disk, size, offset);
 	}
 
