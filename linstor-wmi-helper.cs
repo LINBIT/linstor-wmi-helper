@@ -91,7 +91,7 @@ class LinstorWMIHelper
 		return arr[0];
 	}
 
-	private static ManagementObjectCollection GetPartitionsForDisk(ManagementBaseObject disk, String assoc_class)
+	private static ManagementObjectCollection GetPartitionsForDisk(ManagementBaseObject disk)
 	{
 		string quoted_object_id = disk["ObjectId"].
 			ToString().Replace(@"\", @"\\").Replace(@"""", @"\""");
@@ -99,7 +99,7 @@ class LinstorWMIHelper
                      + disk.ClassPath + @".ObjectId="""
 		     + quoted_object_id
                      + @"""} "
-                     + @"Where AssocClass = "+assoc_class;
+                     + @"Where AssocClass = MSFT_DiskToPartition";
 
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
 		return query.Get();
@@ -171,11 +171,9 @@ class LinstorWMIHelper
 		return vdisk["ObjectID"].ToString();
 	}
 
-		/* TODO: from disk */
-	private static ManagementObject GetPartition(ManagementBaseObject vdisk, int number)
+	private static ManagementObject GetPartition(ManagementBaseObject disk, int number)
 	{
-		ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
-		ManagementObjectCollection partitions = GetPartitionsForDisk(disk, "MSFT_DiskToPartition");
+		ManagementObjectCollection partitions = GetPartitionsForDisk(disk);
 		ManagementBaseObject partition = null;
 
 		foreach (var p in partitions) {
@@ -187,19 +185,19 @@ class LinstorWMIHelper
 		return (ManagementObject) partition;
 	}
 
-	private static ManagementObject GetMSRPartition(ManagementBaseObject vdisk)
+	private static ManagementObject GetMSRPartition(ManagementBaseObject disk)
 	{
-		return GetPartition(vdisk, 1);
+		return GetPartition(disk, 1);
 	}
 
-	private static ManagementObject GetDataPartition(ManagementBaseObject vdisk)
+	private static ManagementObject GetDataPartition(ManagementBaseObject disk)
 	{
-		return GetPartition(vdisk, 2);
+		return GetPartition(disk, 2);
 	}
 
-	private static ulong[] GetSizeAndOffsetOfMSRPartition(ManagementBaseObject vdisk)
+	private static ulong[] GetSizeAndOffsetOfMSRPartition(ManagementBaseObject disk)
 	{
-		var msr_partition = GetMSRPartition(vdisk);
+		var msr_partition = GetMSRPartition(disk);
 		ulong[] ret = { 0, 0 };
 
 		if (msr_partition != null) {
@@ -234,12 +232,13 @@ class LinstorWMIHelper
 	private static void ResizeVirtualDiskAndPartition(String name, ulong size)
 	{
 		var vdisk = GetVirtualDiskByFriendlyName(name);
-		var partition = GetDataPartition(vdisk);
+		ManagementObject disk = GetDiskForVirtualDisk(vdisk);
+		var partition = GetDataPartition(disk);
 
 		if (partition == null) {
 			throw new Exception("No data partition in disk "+name+", was it created by linstor-wmi-helper?");
 		}
-		ulong[] msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(vdisk);
+		ulong[] msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(disk);
 		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+64*1024, true);
 
 		if (ulong.Parse(partition["Size"].ToString()) == size)
@@ -267,7 +266,7 @@ class LinstorWMIHelper
 		ManagementObject disk = GetDiskForVirtualDisk(vdisk);
 		InitializeDisk(disk);
 
-		msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(vdisk);
+		msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(disk);
 		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+64*1024, false);
 
 		offset = msr_partition_size_and_offset[0] + msr_partition_size_and_offset[1];
@@ -279,7 +278,8 @@ class LinstorWMIHelper
 		var vdisks = GetVirtualDisksByPattern(pattern);
 		foreach (var vdisk in vdisks) {
 			ManagementBaseObject pool = GetStoragePoolForVirtualDisk(vdisk);
-			var partition2 = GetDataPartition(vdisk);
+			ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
+			var partition2 = GetDataPartition(disk);
 
 			if (partition2 != null) {
 				Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", 
@@ -300,7 +300,7 @@ class LinstorWMIHelper
 		var vdisks = GetVirtualDisksByPattern(pattern);
 		foreach (var vdisk in vdisks) {
 			ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
-			ManagementObjectCollection partitions = GetPartitionsForDisk(disk, "MSFT_DiskToPartition");
+			ManagementObjectCollection partitions = GetPartitionsForDisk(disk);
 			foreach (var p in partitions) {
 				Console.WriteLine("{0}\t{1}\t{2}\t{3}", 
 					vdisk["FriendlyName"].ToString(),
