@@ -270,6 +270,16 @@ class LinstorWMIHelper
 		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+64*1024, false);
 
 		offset = msr_partition_size_and_offset[0] + msr_partition_size_and_offset[1];
+		// offset = (offset + 4095) / 4096 * 4096;
+Console.WriteLine("Offset before align: "+offset);
+		// offset = (offset + (1024*1024-1)) / (1024*1024) * 1024 * 1024;
+		// offset = (offset + (16*1024-1)) / (16*1024) * 16 * 1024;
+		// offset = (offset + (256*1024-1)) / (256*1024) * 256 * 1024;
+			/* Partitions need to be 64K aligned. */
+		offset = (offset + (64*1024-1)) / (64*1024) * 64 * 1024;
+		// offset = (offset + (32*1024-1)) / (32*1024) * 32 * 1024;
+Console.WriteLine("Offset after align: "+offset);
+
 		CreatePartition(disk, size, offset);
 	}
 
