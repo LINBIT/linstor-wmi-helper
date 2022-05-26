@@ -16,7 +16,6 @@ class LinstorWMIHelper
 	private static ManagementClass PartitionClass;
 
 	private static ulong GPTOverhead = 130*1024*1024;
-//	private static ulong PartitionOffset = 129*1024*1024;
 
 	private static ManagementObjectCollection GetStoragePools()
 	{
@@ -61,7 +60,6 @@ class LinstorWMIHelper
 	{
 		string quoted_object_id = objectId.Replace(@"\", @"\\").Replace(@"""", @"\""");
 		string query_string = "Select * From MSFT_VirtualDisk Where ObjectID = \""+quoted_object_id+"\"";
-Console.WriteLine("query string is "+query_string);
 
 		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", query_string);
 		var res = query.Get();
@@ -159,7 +157,6 @@ Console.WriteLine("query string is "+query_string);
 
 	private static String CreateVirtualDisk(ManagementObject pool, string friendly_name, ulong size, bool thin)
 	{
-		Console.Write("About to create virtual disk "+friendly_name+" with "+size+" bytes\n");
 		ManagementBaseObject p = StoragePoolClass.GetMethodParameters("CreateVirtualDisk");
 		p["FriendlyName"] = friendly_name;
 		p["Size"] = size;
@@ -216,7 +213,7 @@ Console.WriteLine("query string is "+query_string);
 		return ret;	/* No MSR partition, assume 0 */
 	}
 
-	private static void ResizeVirtualDisk(ManagementObject vdisk, ulong size)
+	private static void ResizeVirtualDisk(ManagementObject vdisk, ulong size, bool warn)
 	{
 		var vdisk_size = ulong.Parse(vdisk["Size"].ToString());
 		var requested_vdisk_size = size;
@@ -230,7 +227,9 @@ Console.WriteLine("query string is "+query_string);
 				throw new Exception("Couldn't resize virtual disk error is "+ret["ReturnValue"]);
 			}
 		} else {
-			Console.WriteLine("Warning: Cannot shrink virtual disk "+vdisk["FriendlyName"]+" from "+vdisk_size+" to "+requested_vdisk_size+" bytes, only resizing data partition.");
+			if (warn) {
+				Console.WriteLine("Warning: Cannot shrink virtual disk "+vdisk["FriendlyName"]+" from "+vdisk_size+" to "+requested_vdisk_size+" bytes, only resizing data partition.");
+			}
 		}
 	}
 
@@ -242,7 +241,7 @@ Console.WriteLine("query string is "+query_string);
 		if (partition == null) {
 			throw new Exception("No data partition in disk "+name+", was it created by linstor-wmi-helper?");
 		}
-		ResizeVirtualDisk(vdisk, size + GPTOverhead); /* TODO: compute size from MSR parition size */
+		ResizeVirtualDisk(vdisk, size + GPTOverhead, true); /* TODO: compute size from MSR parition size */
 
 		var p2 = PartitionClass.GetMethodParameters("Resize");
 		p2["Size"] = size;
@@ -256,7 +255,6 @@ Console.WriteLine("query string is "+query_string);
 	private static void CreateVirtualDiskWithPartition(ManagementObject pool, string friendly_name, ulong size, bool thin)
 	{
 		String vdisk_path = CreateVirtualDisk(pool, friendly_name, size, thin);
-Console.WriteLine("vdisk_path is "+vdisk_path);
 		ManagementObject vdisk = GetVirtualDiskByObjectID(vdisk_path);
 		ulong offset;
 		ulong[] msr_partition_size_and_offset;
@@ -268,13 +266,8 @@ Console.WriteLine("vdisk_path is "+vdisk_path);
 		InitializeDisk(disk);
 
 		msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(vdisk);
-		// ResizeVirtualDisk(vdisk, size+msr_partition_size+2*1024*1024); /* TODO: smaller header is 16KB query offset of MSRPartition? */
-Console.WriteLine("{0} {1}", msr_partition_size_and_offset[0], msr_partition_size_and_offset[1]);
-		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+64*1024);
+		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+64*1024, false);
 
-		// offset = msr_partition_size + 1024*1024;	/* again, smaller */
-		// offset = msr_partition_size + 16*1024;
-		// offset = msr_partition_size + 17*1024;
 		offset = msr_partition_size_and_offset[0] + msr_partition_size_and_offset[1];
 		CreatePartition(disk, size, offset);
 	}
