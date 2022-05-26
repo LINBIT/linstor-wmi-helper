@@ -270,7 +270,7 @@ Console.WriteLine("vdisk_path is "+vdisk_path);
 		msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(vdisk);
 		// ResizeVirtualDisk(vdisk, size+msr_partition_size+2*1024*1024); /* TODO: smaller header is 16KB query offset of MSRPartition? */
 Console.WriteLine("{0} {1}", msr_partition_size_and_offset[0], msr_partition_size_and_offset[1]);
-		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]);
+		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+64*1024);
 
 		// offset = msr_partition_size + 1024*1024;	/* again, smaller */
 		// offset = msr_partition_size + 16*1024;
