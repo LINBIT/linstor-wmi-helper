@@ -15,8 +15,6 @@ class LinstorWMIHelper
 	private static ManagementClass VirtualDiskClass;
 	private static ManagementClass PartitionClass;
 
-	private static ulong GPTOverhead = 130*1024*1024;
-
 	private static ManagementObjectCollection GetStoragePools()
 	{
 		return StoragePoolClass.GetInstances();
@@ -244,6 +242,9 @@ class LinstorWMIHelper
 		ulong[] msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(vdisk);
 		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+64*1024, true);
 
+		if (ulong.Parse(partition["Size"].ToString()) == size)
+			return;
+ 
 		var p2 = PartitionClass.GetMethodParameters("Resize");
 		p2["Size"] = size;
 		var ret2 = partition.InvokeMethod("Resize", p2, null);
