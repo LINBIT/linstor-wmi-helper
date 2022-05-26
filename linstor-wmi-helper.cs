@@ -176,6 +176,7 @@ Console.WriteLine("query string is "+query_string);
 		return vdisk["ObjectID"].ToString();
 	}
 
+		/* TODO: from disk */
 	private static ManagementObject GetPartition(ManagementBaseObject vdisk, int number)
 	{
 		ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
@@ -264,9 +265,9 @@ Console.WriteLine("vdisk_path is "+vdisk_path);
 		InitializeDisk(disk);
 
 		msr_partition_size = GetSizeOfMSRPartition(vdisk);
-		ResizeVirtualDisk(vdisk, size+msr_partition_size+2*1024*1024);
+		ResizeVirtualDisk(vdisk, size+msr_partition_size+2*1024*1024); /* TODO: smaller header is 16KB query offset of MSRPartition? */
 
-		offset = msr_partition_size + 1024*1024;
+		offset = msr_partition_size + 1024*1024;	/* again, smaller */
 		CreatePartition(disk, size, offset);
 	}
 
@@ -287,6 +288,22 @@ Console.WriteLine("vdisk_path is "+vdisk_path);
 			} else {
 				Console.WriteLine("{0} has no partition 2, was it created by linstor-wmi-helper?",
 					vdisk["FriendlyName"].ToString());
+			}
+		}
+	}
+
+	private static void PrintPartitionInfo(String pattern)
+	{
+		var vdisks = GetVirtualDisksByPattern(pattern);
+		foreach (var vdisk in vdisks) {
+			ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
+			ManagementObjectCollection partitions = GetPartitionsForDisk(disk, "MSFT_DiskToPartition");
+			foreach (var p in partitions) {
+				Console.WriteLine("{0}\t{1}\t{2}\t{3}", 
+					vdisk["FriendlyName"].ToString(),
+					p["PartitionNumber"].ToString(),
+					p["Size"].ToString(),
+					p["Offset"].ToString());
 			}
 		}
 	}
@@ -329,6 +346,10 @@ Console.WriteLine("vdisk_path is "+vdisk_path);
 				PrintVirtualDiskInfo(args[2]);
 				return;
 			}
+			if (args.Length == 3 && args[1] == "list-partitions") {
+				PrintPartitionInfo(args[2]);
+				return;
+			}
 			if (args.Length == 3 && args[1] == "delete") {
 				DeleteVirtualDisk(args[2]);
 				return;
@@ -352,9 +373,12 @@ Console.WriteLine("vdisk_path is "+vdisk_path);
 
 		Console.WriteLine("Usage: linstor-wmi-helper virtual-disk create <storage-pool-friendly-name> <newdisk-friendly-name> <size-in-bytes> <thin-or-thick>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk list <pattern>");
+		Console.WriteLine("       linstor-wmi-helper virtual-disk list-partitions <pattern>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk delete <disk-friendly-name>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk delete-all <pattern>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk resize <disk-friendly-name> <size-in-bytes>");
+		Console.WriteLine("       linstor-wmi-helper storage-pool get-sizes <storage-pool-friendly-name>");
+
 		Environment.ExitCode = 1;
 	}
 }
