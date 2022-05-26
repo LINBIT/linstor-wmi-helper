@@ -158,31 +158,51 @@ class LinstorWMIHelper
 		return (ManagementBaseObject) ret["CreatedVirtualDisk"];
 	}
 
+	private static ManagementObject GetPartition(ManagementBaseObject vdisk, int number)
+	{
+		ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
+		ManagementObjectCollection partitions = GetPartitionsForDisk(disk, "MSFT_DiskToPartition");
+		ManagementBaseObject partition = null;
+
+		foreach (var p in partitions) {
+			if (int.Parse(p["PartitionNumber"].ToString()) == number) {
+				partition = p;
+				break;
+			}
+		}
+		return (ManagementObject) partition;
+	}
+
+	private static ManagementObject GetMSRPartition(ManagementBaseObject vdisk)
+	{
+		return GetPartition(vdisk, 1);
+	}
+
+	private static ManagementObject GetDataPartition(ManagementBaseObject vdisk)
+	{
+		return GetPartition(vdisk, 2);
+	}
+
 	private static void CreateVirtualDiskWithPartition(ManagementObject pool, string friendly_name, ulong size, bool thin)
 	{
 		ManagementBaseObject vdisk = CreateVirtualDisk(pool, friendly_name, size + GPTOverhead, thin);
+		ulong offset = PartitionOffset;
 
 		if (vdisk == null)
 			throw new Exception("CreateVirtualDisk returned null as object");
 
 		ManagementObject disk = GetDiskForVirtualDisk(vdisk);
 		InitializeDisk(disk);
-		CreatePartition(disk, size, PartitionOffset);
-	}
 
-	private static ManagementObject GetDataPartition(ManagementBaseObject vdisk)
-	{
-		ManagementBaseObject disk = GetDiskForVirtualDisk(vdisk);
-		ManagementObjectCollection partitions = GetPartitionsForDisk(disk, "MSFT_DiskToPartition");
-		ManagementBaseObject partition2 = null;
-
-		foreach (var p in partitions) {
-			if (int.Parse(p["PartitionNumber"].ToString()) == 2) {
-				partition2 = p;
-				break;
-			}
+		var msr_partition = GetMSRPartition(vdisk);
+		if (msr_partition != null) {
+			ulong msr_partition_size = ulong.Parse(msr_partition["Size"].ToString());
+			offset = msr_partition_size + 1024*1024;
+		} else {
+			Console.WriteLine("Warning: no MSR partition on disk, is this a GPT disk?");
 		}
-		return (ManagementObject) partition2;
+
+		CreatePartition(disk, size, offset);
 	}
 
 	private static void PrintVirtualDiskInfo(String pattern)
