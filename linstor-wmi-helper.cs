@@ -375,6 +375,13 @@ class LinstorWMIHelper
 				Console.WriteLine("{0} {1}", the_pool["Size"], the_pool["AllocatedSize"]);
 				return;
 			}
+			if (args.Length == 2 && args[1] == "list") {
+				var pools = GetStoragePools();
+				foreach (var p in pools) {
+					Console.WriteLine("{0}", p["FriendlyName"]);
+				}
+				return;
+			}
 		}
 
 		Console.WriteLine("Usage: linstor-wmi-helper virtual-disk create <storage-pool-friendly-name> <newdisk-friendly-name> <size-in-bytes> <thin-or-thick>");
@@ -383,6 +390,7 @@ class LinstorWMIHelper
 		Console.WriteLine("       linstor-wmi-helper virtual-disk delete <disk-friendly-name>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk delete-all <pattern>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk resize <disk-friendly-name> <size-in-bytes>");
+		Console.WriteLine("       linstor-wmi-helper storage-pool list");
 		Console.WriteLine("       linstor-wmi-helper storage-pool get-sizes <storage-pool-friendly-name>");
 
 		Environment.ExitCode = 1;
