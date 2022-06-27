@@ -1,5 +1,6 @@
 using System;
 using System.Management;
+using Microsoft.Win32;
 
 class LinstorWMIHelper
 {
@@ -383,6 +384,17 @@ class LinstorWMIHelper
 				return;
 			}
 		}
+		if (args.Length > 1 && args[0] == "registry") {
+			if (args.Length == 4 && args[1] == "read-string-value") {
+				string val = (string)Registry.GetValue(args[2], args[3], null);
+				if (val != null) {
+					Console.WriteLine(val);
+				} else {
+					Environment.ExitCode = 1;
+				}
+				return;
+			}
+		}
 
 		Console.WriteLine("Usage: linstor-wmi-helper virtual-disk create <storage-pool-friendly-name> <newdisk-friendly-name> <size-in-bytes> <thin-or-thick>");
 		Console.WriteLine("       linstor-wmi-helper virtual-disk list <pattern>");
@@ -392,6 +404,7 @@ class LinstorWMIHelper
 		Console.WriteLine("       linstor-wmi-helper virtual-disk resize <disk-friendly-name> <size-in-bytes>");
 		Console.WriteLine("       linstor-wmi-helper storage-pool list");
 		Console.WriteLine("       linstor-wmi-helper storage-pool get-sizes <storage-pool-friendly-name>");
+		Console.WriteLine("       linstor-wmi-helper registry read-string-value <path-to-key> <value>");
 
 		Environment.ExitCode = 1;
 	}
