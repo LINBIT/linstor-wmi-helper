@@ -163,6 +163,7 @@ class LinstorWMIHelper
 		p["ResiliencySettingName"] = "Simple"; /* no RAID for now */
 		p["Usage"] = 1;
 		p["OtherUsageDescription"] = "WinDRBD backing disk";
+		p["AllocationUnitSize"] = 256*1024*1024; /* lowest possible value */
 		ManagementBaseObject ret = pool.InvokeMethod("CreateVirtualDisk", p, null);
 
 		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
