@@ -406,6 +406,8 @@ class LinstorWMIHelper
 		Console.WriteLine("       linstor-wmi-helper storage-pool list");
 		Console.WriteLine("       linstor-wmi-helper storage-pool get-sizes <storage-pool-friendly-name>");
 		Console.WriteLine("       linstor-wmi-helper registry read-string-value <path-to-key> <value>");
+		Console.WriteLine("");
+		Console.WriteLine("       Pattern wildcard is % so to list all LINSTOR disks use LINSTOR-% ");
 
 		Environment.ExitCode = 1;
 	}
