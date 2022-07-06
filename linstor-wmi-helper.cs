@@ -224,6 +224,14 @@ class LinstorWMIHelper
 			if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
 				throw new Exception("Couldn't resize virtual disk error is "+ret["ReturnValue"]);
 			}
+
+			ManagementObject disk = GetDiskForVirtualDisk(vdisk);
+			var p2 = DiskClass.GetMethodParameters("Refresh");
+			var ret2 = disk.InvokeMethod("Refresh", p2, null);
+
+			if (ulong.Parse(ret2["ReturnValue"].ToString()) != 0) {
+				throw new Exception("Couldn't refresh disk error is "+ret["ReturnValue"]);
+			}
 		} else {
 			if (warn) {
 				Console.WriteLine("Warning: Cannot shrink virtual disk "+vdisk["FriendlyName"]+" from "+vdisk_size+" to "+requested_vdisk_size+" bytes, only resizing data partition.");
