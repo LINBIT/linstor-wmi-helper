@@ -281,11 +281,11 @@ class LinstorWMIHelper
 		InitializeDisk(disk);
 
 		msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(disk);
-		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+128*1024, false);
+		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+(1024+128)*1024, false);
 
 		offset = msr_partition_size_and_offset[0] + msr_partition_size_and_offset[1];
-			/* Partitions need to be 64K aligned. */
-		offset = (offset + (64*1024-1)) / (64*1024) * 64 * 1024;
+		/* Partitions need to be 1MB (server 2012) aligned. */
+		offset = (offset + (1024*1024-1)) / (1024*1024) * 1024 * 1024;
 
 		CreatePartition(disk, size, offset);
 	}
