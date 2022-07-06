@@ -163,7 +163,7 @@ class LinstorWMIHelper
 		p["ResiliencySettingName"] = "Simple"; /* no RAID for now */
 		p["Usage"] = 1;
 		p["OtherUsageDescription"] = "WinDRBD backing disk";
-//		p["AllocationUnitSize"] = 256*1024*1024; /* lowest possible value */
+		p["AllocationUnitSize"] = 256*1024*1024; /* lowest possible value */
 		ManagementBaseObject ret = pool.InvokeMethod("CreateVirtualDisk", p, null);
 
 		if (ulong.Parse(ret["ReturnValue"].ToString()) != 0) {
@@ -249,7 +249,7 @@ class LinstorWMIHelper
 			throw new Exception("No data partition in disk "+name+", was it created by linstor-wmi-helper?");
 		}
 		ulong[] msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(disk);
-		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+64*1024*1024, true);
+		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+128*1024, true);
 
 		if (ulong.Parse(partition["Size"].ToString()) == size)
 			return;
@@ -265,7 +265,7 @@ class LinstorWMIHelper
 
 	private static void CreateVirtualDiskWithPartition(ManagementObject pool, string friendly_name, ulong size, bool thin)
 	{
-		String vdisk_path = CreateVirtualDisk(pool, friendly_name, size+64*1024*1024, thin);
+		String vdisk_path = CreateVirtualDisk(pool, friendly_name, size, thin);
 		ManagementObject vdisk = GetVirtualDiskByObjectID(vdisk_path);
 		ulong offset;
 		ulong[] msr_partition_size_and_offset;
@@ -277,7 +277,7 @@ class LinstorWMIHelper
 		InitializeDisk(disk);
 
 		msr_partition_size_and_offset = GetSizeAndOffsetOfMSRPartition(disk);
-//		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+1024*1024, false);
+		ResizeVirtualDisk(vdisk, size+msr_partition_size_and_offset[0]+2*msr_partition_size_and_offset[1]+128*1024, false);
 
 		offset = msr_partition_size_and_offset[0] + msr_partition_size_and_offset[1];
 			/* Partitions need to be 64K aligned. */
