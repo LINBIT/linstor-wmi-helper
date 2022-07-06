@@ -165,8 +165,8 @@ class LinstorWMIHelper
 		p["OtherUsageDescription"] = "WinDRBD backing disk";
 		try {
 			p["AllocationUnitSize"] = 256*1024*1024; /* lowest possible value */
-		} catch (ManagementException e) {
-			Console.WriteLine("Warning: Could not set AllocationUnitSize is this a Windows Server 2012 R2 OS?"+e);
+		} catch (ManagementException) {
+			Console.WriteLine("Warning: Could not set AllocationUnitSize is this a Windows Server 2012 R2 OS? Defaulting to 1GB for thick.");
 		}
 		ManagementBaseObject ret = pool.InvokeMethod("CreateVirtualDisk", p, null);
 
