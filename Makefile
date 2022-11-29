@@ -1,4 +1,5 @@
 EXE=linstor-wmi-helper.exe
+WINEPREFIX ?= /home/johannes/.wine-32bit
 
 all: $(EXE)
 
@@ -10,5 +11,6 @@ ifeq ($(shell uname -o),Cygwin)
 	./run-csc.bat $<
 else
 # must install wine via apt and Visual Studio 2022 from .tar.gz
-	wine '/home/johannes/.wine/drive_c/Program Files/Microsoft Visual Studio/2022/Community/Msbuild/Current/Bin/Roslyn/csc.exe' $<
+#	wine '/home/johannes/.wine/drive_c/Program Files/Microsoft Visual Studio/2022/Community/Msbuild/Current/Bin/Roslyn/csc.exe' $<
+	wine '$(WINEPREFIX)/drive_c/Program Files/Microsoft Visual Studio/2022/Community/Msbuild/Current/Bin/Roslyn/csc.exe' $<
 endif
