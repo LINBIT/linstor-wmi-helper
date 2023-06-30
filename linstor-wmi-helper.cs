@@ -40,6 +40,12 @@ class LinstorWMIHelper
 		return query.Get();
 	}
 
+	private static ManagementObjectCollection GetAvailableStoragePools()
+	{
+		var query = new ManagementObjectSearcher("ROOT\\Microsoft\\Windows\\Storage", "Select * From MSFT_StoragePool Where IsPrimordial = False");
+		return query.Get();
+	}
+
 	private static ManagementObject GetStoragePoolByFriendlyName(String name)
 	{
 		return GetObjectByFriendlyName(name, "MSFT_StoragePool");
@@ -396,6 +402,13 @@ class LinstorWMIHelper
 				}
 				return;
 			}
+			if (args.Length == 2 && args[1] == "list-available") {
+				var pools = GetAvailableStoragePools();
+				foreach (var p in pools) {
+					Console.WriteLine("{0}\t{1}\t{2}", p["FriendlyName"], p["Size"], p["AllocatedSize"]);
+				}
+				return;
+			}
 		}
 		if (args.Length > 1 && args[0] == "registry") {
 			if (args.Length == 4 && args[1] == "read-string-value") {
@@ -417,6 +430,7 @@ class LinstorWMIHelper
 		Console.WriteLine("       linstor-wmi-helper virtual-disk resize <disk-friendly-name> <size-in-bytes>");
 		Console.WriteLine("       linstor-wmi-helper storage-pool list");
 		Console.WriteLine("       linstor-wmi-helper storage-pool get-sizes <storage-pool-friendly-name>");
+		Console.WriteLine("       linstor-wmi-helper storage-pool list-available");
 		Console.WriteLine("       linstor-wmi-helper registry read-string-value <path-to-key> <value>");
 		Console.WriteLine("");
 		Console.WriteLine("       Pattern wildcard is % so to list all LINSTOR disks use LINSTOR-% ");
