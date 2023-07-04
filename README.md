@@ -1,4 +1,4 @@
-== LINSTOR WMI helper
+# LINSTOR WMI helper
 
 This C# tool provides some basic functionality for
 managing virtual disks for Microsoft Storage Spaces.
@@ -14,3 +14,5 @@ Management Interface (wmi) libraries. By using wine
 for the C# compiler one can build it also under
 Linux.
 
+This tool was written from scratch by Johannes
+Thoma (johannes@johannesthoma.com).
